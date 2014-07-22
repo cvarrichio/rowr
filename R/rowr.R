@@ -1,0 +1,184 @@
+#' Row-based cuntions for R objects.
+#'
+#' Rowr allows the manipulation of R objects as if they were organized rows in a
+#' way that is familiar to people used to working with databases.  It allows
+#' more consistent and predictable output to common functions, and generalizes a
+#' number of utility functions to to be failsafe with any number of objects.
+#' @name rowr
+#' @docType package
+NULL
+
+#' Robust alternative to Vectorize function that accepts any function with two 
+#' or more arguments.
+#' 
+#' Returns a function that will work an arbitrary number of vectors, lists or 
+#' data frames, though output may be unpredicatable in unusual applications The 
+#' results are also intended to be more intuitive than \code{\link{Vectorize}}.
+#' 
+#' @param fun a two or more argument function
+#' @param type like \code{MARGIN} in \code{\link{apply}}, except that \code{c(1,2)} is
+#'   represented as a \code{3} instead.  By default, will \code{Reduce} single dimensional
+#'   data handle everything else row-wise.
+#' @export
+#' @examples
+#' vectorize(`+`)(c(1,2,3))
+#' vectorize(sum)(c(1,2,3),c(1,2,3))
+#' # Compare these results to Vectorize, which does not vectorize sum at all.
+#' Vectorize(sum)(c(1,2,3),c(1,2,3))
+#' # Across data frame columns.
+#' df<-data.frame(a=c(1,2,3),b=c(1,2,3))
+#' vectorize(sum)(df$a,df$b)
+#' # Once again, Vectorize gives a different result
+#' Vectorize(sum)(df$a,df$b)
+#' # Any combination of vectors, lists, matrices, or data frames an be used.
+#' vectorize(`+`)(c(1,2,3),list(1,2,3),cbind(c(1,2,3)))
+vectorize<-function(fun,type=NULL)
+{
+  function(...)
+  {
+    cols<-cbind.fill(...)
+    if(is.null(type))
+      if(dim(cols)[2]<2)
+        type=2
+      else
+        type=1
+    if(type==3)
+      margin=c(1,2)
+    else
+      margin=type
+    if(type %in% c(1,2,3))
+      apply(cols,margin,function (x) Reduce(fun,unlist(x)))
+    else
+      Reduce(fun,unlist(cols))
+  }  
+}
+
+#' Robust alternative to \code{\link{cbind} that fills missing values and works
+#' on arbitrary data types.
+#' 
+#' Combines any number of R objects into a single matrix, with each input
+#' corresponding to the greater of 1 or ncol.  \code{cbind} has counterintuitive
+#' results when working with lists, cannot handle certain inputs of differing
+#' length, and does not allow the fill to be specified.
+#' 
+#' @param ... any number of R data objects
+#' @param fill 
+#' @export
+#' @examples
+#' cbind.fill(c(1,2,3),list(1,2,3),cbind(c(1,2,3)))
+#' cbind.fill(c(1,2,3),list(1,2,3),cbind(c('a','b')),'a',df)
+#' cbind.fill(c(1,2,3),list(1,2,3),cbind(c('a','b')),'a',df,fill=NA)
+cbind.fill<-function(...,fill=NULL)
+{
+  inputs<-list(...)
+  maxlength<-max(unlist(lapply(inputs,len)))
+  bufferedInputs<-lapply(inputs,buffer,length.out=maxlength,fill,restoreClass=FALSE)
+  return(Reduce(cbind,bufferedInputs))
+}
+
+#'Allows row indexing without knowledge of dimensionality.
+#'
+#'@export
+rows <- function(data,rownums)
+{
+  #result<-data[rownums]
+  if(is.null(dim(data)))
+  {
+    result<-data[rownums]
+  }
+  else
+  {
+    result<-data[rownums,]
+  }
+  #result<-ifelse(is.null(dim(data)),data[c(rownums)],data[c(rownums),])
+  return(result)
+}
+
+#'Allows finding the 'length' without knowledge of dimensionality.
+#'
+#'@param data any \code{R} object
+#'@export
+#'
+len <- function(data)
+{
+  result<-ifelse(is.null(nrow(data)),length(data),nrow(data))
+  return(result)
+}
+
+# buffer<-function(...,size=0,fill=NA,align='left')
+# {
+#   input<-c(...)
+#   if(align=='left')
+#     result<-c(input,rep(fill,(max(0,size-len(input)))))
+#   else
+#     result<-c(rep(fill,(max(0,size-len(input)))),input)
+#   return(result)
+# }
+
+#'Pads an object to a desired length, either with replicates of itself or another repeated object.
+#'
+#'@param x an R object
+#'@param length.out the desired length of the final output
+#'@export
+#'@examples
+#'buffer(c(1,2,3),20)
+#'buffer(matrix(c(1,2,3,4),nrow=2),20)
+#'buffer(list(1,2,3),20)
+buffer<-function(x,length.out=len(x),fill=NULL,restoreClass=TRUE)
+{
+  xclass<-class(x)
+  input<-data.frame(cbind(x))
+  results<-sapply(input,rep_len,length.out=length.out)
+  if(length.out>len(x) && !is.null(fill))
+  {
+    results<-t(results)
+    results[(length(unlist(x))+1):length(unlist(results))]<-fill
+    results<-t(results)
+  }
+  if(restoreClass)
+    if(xclass=='data.frame')
+      results<-as.data.frame(results)
+  else
+    results<-as(results,xclass)
+  return(results)   
+}
+
+#' A more versatile form of the T-SQL \code{coalesce()} function.  
+#'
+#' Little more than a wrapper for \code{\link{vectorize}}, allows for duplication of SQL coalesce functionality, certain types of if-else statements, and \code{\link{apply}}/\code{\link{Reduce}} combinations.
+#' 
+#' @param ... an arbitrary number of \code{R} objects
+#' @param fun a two argument function that returns an atomic value
+#' @export
+#' @examples
+#' coalesce(c(NA,1,2))
+#' coalesce(c(NA,1,2),c(3,4,NA))
+#' df<-data.frame(a=c(NA,2,3),b=c(1,2,NA))
+#' coalesce(df$a,df$b)
+#' # Or even just:
+#' coalesce(df)
+coalesce<-function(...,fun=(function (x,y) if(!is.na(x)) x else y))
+{
+
+    FUN=match.fun(fun)
+    vectorize(FUN)(...)
+}
+
+#'A more versatile form of the T-SQL \code{count()} function.
+#'
+#'Implementation of T-SQL \code{count} and Excel \code{COUNTIF} functions.  Shows the total number of elements in any number of data objects altogether or that match a condition.
+#'
+#'@param ... an arbitrary number of \code{R} objects
+#'@param condition a 1 argument condition
+#'@export
+#'@examples
+#'count(c(NA,1,2))
+#'count(c(NA,1,2),is.na)
+#'count(c(NA,1,2),list('A',4),cbind(1,2,3))
+#'count(c(NA,1,2),list('A',4),cbind(1,2,3),condition=is.character)
+count<-function(...,condition=(function (x) TRUE))
+{
+  data<-c(...)
+  result<-sum(sapply(data, function (x) if(condition(x)) 1 else 0))
+  return(result)
+}
