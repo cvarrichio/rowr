@@ -1,4 +1,4 @@
-#' Row-based cuntions for R objects.
+#' Row-based functions for R objects.
 #'
 #' Rowr allows the manipulation of R objects as if they were organized rows in a
 #' way that is familiar to people used to working with databases.  It allows
@@ -8,12 +8,13 @@
 #' @docType package
 NULL
 
-#' Robust alternative to Vectorize function that accepts any function with two 
-#' or more arguments.
+
+#' Vectorize a scalar function to work on any R object.
 #' 
-#' Returns a function that will work an arbitrary number of vectors, lists or 
-#' data frames, though output may be unpredicatable in unusual applications The 
-#' results are also intended to be more intuitive than \code{\link{Vectorize}}.
+#' Robust alternative to \code{\link{Vectorize}} function that accepts any function with two 
+#' or more arguments.  Returns a function that will work an arbitrary number of vectors, lists or 
+#' data frames, though output may be unpredicatable in unusual applications.  The 
+#' results are also intended to be more intuitive than Vectorize.
 #' 
 #' @param fun a two or more argument function
 #' @param type like \code{MARGIN} in \code{\link{apply}}, except that \code{c(1,2)} is
@@ -53,16 +54,48 @@ vectorize<-function(fun,type=NULL)
   }  
 }
 
-#' Robust alternative to \code{\link{cbind} that fills missing values and works
-#' on arbitrary data types.
+
+#'Pads an object to a desired length, either with replicates of itself or another repeated object.
+#'
+#'@param x an R object
+#'@param length.out the desired length of the final output
+#'@param fill R object to fill empty rows in columns below the max size.  If unspecified, repeats input rows in the same way as \code{cbind}.
+#'@param preserveClass determines whether to return an object of the same class as the original argument.  Otherwise, returns a matrix.
+#'@export
+#'@examples
+#'buffer(c(1,2,3),20)
+#'buffer(matrix(c(1,2,3,4),nrow=2),20)
+#'buffer(list(1,2,3),20)
+buffer<-function(x,length.out=len(x),fill=NULL,preserveClass=TRUE)
+{
+  xclass<-class(x)
+  input<-data.frame(cbind(x))
+  results<-sapply(input,rep_len,length.out=length.out)
+  if(length.out>len(x) && !is.null(fill))
+  {
+    results<-t(results)
+    results[(length(unlist(x))+1):length(unlist(results))]<-fill
+    results<-t(results)
+  }
+  if(preserveClass)
+    if(xclass=='data.frame')
+      results<-as.data.frame(results)
+  else
+    results<-as(results,xclass)
+  return(results)   
+}
+
+
+#' Combine arbitrary data types, filling in missing rows.
 #' 
-#' Combines any number of R objects into a single matrix, with each input
+#' Robust alternative to \code{\link{cbind}} that fills missing values and works
+#' on arbitrary data types.  Combines any number of R objects into a single matrix, with each input
 #' corresponding to the greater of 1 or ncol.  \code{cbind} has counterintuitive
 #' results when working with lists, cannot handle certain inputs of differing
 #' length, and does not allow the fill to be specified.
 #' 
 #' @param ... any number of R data objects
-#' @param fill 
+#' @param fill R object to fill empty rows in columns below the max size.  If unspecified, repeats input rows in the same way as \code{cbind}. Passed to \code{\link{buffer}}.
 #' @export
 #' @examples
 #' cbind.fill(c(1,2,3),list(1,2,3),cbind(c(1,2,3)))
@@ -72,13 +105,20 @@ cbind.fill<-function(...,fill=NULL)
 {
   inputs<-list(...)
   maxlength<-max(unlist(lapply(inputs,len)))
-  bufferedInputs<-lapply(inputs,buffer,length.out=maxlength,fill,restoreClass=FALSE)
+  bufferedInputs<-lapply(inputs,buffer,length.out=maxlength,fill,preserveClass=FALSE)
   return(Reduce(cbind,bufferedInputs))
 }
 
-#'Allows row indexing without knowledge of dimensionality.
+#'Allows row indexing without knowledge of dimensionality or class.
 #'
+#'@param data any \code{R} object
+#'@param rownums indices of target rows
 #'@export
+#'@examples
+#'rows(c('A','B','C'),c(1,3))
+#'rows(list('A','B','C'),c(1,3))
+#'df<-data.frame(a=c(1,2,3),b=c(1,2,3))
+#'rows(df,3)
 rows <- function(data,rownums)
 {
   #result<-data[rownums]
@@ -105,43 +145,6 @@ len <- function(data)
   return(result)
 }
 
-# buffer<-function(...,size=0,fill=NA,align='left')
-# {
-#   input<-c(...)
-#   if(align=='left')
-#     result<-c(input,rep(fill,(max(0,size-len(input)))))
-#   else
-#     result<-c(rep(fill,(max(0,size-len(input)))),input)
-#   return(result)
-# }
-
-#'Pads an object to a desired length, either with replicates of itself or another repeated object.
-#'
-#'@param x an R object
-#'@param length.out the desired length of the final output
-#'@export
-#'@examples
-#'buffer(c(1,2,3),20)
-#'buffer(matrix(c(1,2,3,4),nrow=2),20)
-#'buffer(list(1,2,3),20)
-buffer<-function(x,length.out=len(x),fill=NULL,restoreClass=TRUE)
-{
-  xclass<-class(x)
-  input<-data.frame(cbind(x))
-  results<-sapply(input,rep_len,length.out=length.out)
-  if(length.out>len(x) && !is.null(fill))
-  {
-    results<-t(results)
-    results[(length(unlist(x))+1):length(unlist(results))]<-fill
-    results<-t(results)
-  }
-  if(restoreClass)
-    if(xclass=='data.frame')
-      results<-as.data.frame(results)
-  else
-    results<-as(results,xclass)
-  return(results)   
-}
 
 #' A more versatile form of the T-SQL \code{coalesce()} function.  
 #'

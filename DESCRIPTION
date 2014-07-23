@@ -1,9 +1,14 @@
 Package: rowr
-Type: Package
-Title: What the package does (short line)
+Title: Row-based functions for R objects.
 Version: 1.0
-Date: 2014-07-21
-Author: Who wrote it
-Maintainer: Who to complain to <yourfault@somewhere.net>
-Description: More about what it does (maybe more than one line)
-License: What license is it under?
+Author: Craig Varrichio <canthony427@gmail.com>
+Maintainer: Craig Varrichio <canthony427@gmail.com>
+Description: Rowr allows the manipulation of R objects as if they were
+    organized rows in a way that is familiar to people used to working with
+    databases.  It allows more consistent and predictable output to common
+    functions, and generalizes a number of utility functions to to be failsafe
+    with any number and type of input objects.
+Depends:
+    R (>= 3.1.0),
+License: GPL-3
+LazyData: true
