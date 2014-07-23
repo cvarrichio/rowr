@@ -9,6 +9,6 @@ Description: Rowr allows the manipulation of R objects as if they were
     functions, and generalizes a number of utility functions to to be failsafe
     with any number and type of input objects.
 Depends:
-    R (>= 3.1.0),
+    R (>= 3.1.0)
 License: GPL-3
 LazyData: true

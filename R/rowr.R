@@ -138,7 +138,11 @@ rows <- function(data,rownums)
 #'
 #'@param data any \code{R} object
 #'@export
-#'
+#'@examples
+#'len(list(1,2,3))
+#'len(c(1,2,3,4))
+#'df<-data.frame(a=c(1,2,3),b=c(1,2,3))
+#'len(df)
 len <- function(data)
 {
   result<-ifelse(is.null(nrow(data)),length(data),nrow(data))
