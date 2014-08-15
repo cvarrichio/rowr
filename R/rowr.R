@@ -66,11 +66,14 @@ vectorize<-function(fun,type=NULL)
 #'buffer(c(1,2,3),20)
 #'buffer(matrix(c(1,2,3,4),nrow=2),20)
 #'buffer(list(1,2,3),20)
+#'df<-data.frame(as.factor(c('Hello','Goodbye')),c(1,2))
+#'buffer(df,5)
+#'buffer((factor(x=c('Hello'))),5)
 buffer<-function(x,length.out=len(x),fill=NULL,preserveClass=TRUE)
 {
   xclass<-class(x)
-  input<-data.frame(cbind(x))
-  results<-sapply(input,rep_len,length.out=length.out)
+  input<-vert(x)
+  results<-as.data.frame(sapply(input,rep,length.out=length.out))
   if(length.out>len(x) && !is.null(fill))
   {
     results<-t(results)
@@ -78,10 +81,7 @@ buffer<-function(x,length.out=len(x),fill=NULL,preserveClass=TRUE)
     results<-t(results)
   }
   if(preserveClass)
-    if(xclass=='data.frame')
-      results<-as.data.frame(results)
-  else
-    results<-as(results,xclass)
+    results<-as2(results,xclass)
   return(results)   
 }
 
@@ -99,14 +99,15 @@ buffer<-function(x,length.out=len(x),fill=NULL,preserveClass=TRUE)
 #' @export
 #' @examples
 #' cbind.fill(c(1,2,3),list(1,2,3),cbind(c(1,2,3)))
+#'df<-data.frame(a=c(1,2,3),b=c(1,2,3))
 #' cbind.fill(c(1,2,3),list(1,2,3),cbind(c('a','b')),'a',df)
-#' cbind.fill(c(1,2,3),list(1,2,3),cbind(c('a','b')),'a',df,fill=NA)
+#' cbind.fill(a=c(1,2,3),list(1,2,3),cbind(c('a','b')),'a',df,fill=NA)
 cbind.fill<-function(...,fill=NULL)
 {
   inputs<-list(...)
   maxlength<-max(unlist(lapply(inputs,len)))
   bufferedInputs<-lapply(inputs,buffer,length.out=maxlength,fill,preserveClass=FALSE)
-  return(Reduce(cbind,bufferedInputs))
+  return(Reduce(cbind.data.frame,bufferedInputs))
 }
 
 #'Allows row indexing without knowledge of dimensionality or class.
@@ -188,4 +189,27 @@ count<-function(...,condition=(function (x) TRUE))
   data<-c(...)
   result<-sum(sapply(data, function (x) if(condition(x)) 1 else 0))
   return(result)
+}
+
+#'A more robust form of the R \code{\link{as}} function.
+#'
+#' Alternative to \code{as} that allows any data object to be converted to any other.  
+#'
+#'@param object any \code{R} object
+#'@param class the name of the class to which \code{object} should be coerced
+as2<-function(object,class)
+{
+  object<-as.matrix(object)
+  if(class=='factor')
+    return(as.factor(as.character(object)))
+  if(class=='data.frame')
+    return(as.data.frame(object))
+  else
+    return(as(object,class))
+}
+
+vert<-function(object)
+{
+   result<-as.data.frame(cbind(as.matrix(object)))
+   return(result)
 }

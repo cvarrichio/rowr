@@ -19,7 +19,8 @@ length, and does not allow the fill to be specified.
 }
 \examples{
 cbind.fill(c(1,2,3),list(1,2,3),cbind(c(1,2,3)))
+df<-data.frame(a=c(1,2,3),b=c(1,2,3))
 cbind.fill(c(1,2,3),list(1,2,3),cbind(c('a','b')),'a',df)
-cbind.fill(c(1,2,3),list(1,2,3),cbind(c('a','b')),'a',df,fill=NA)
+cbind.fill(a=c(1,2,3),list(1,2,3),cbind(c('a','b')),'a',df,fill=NA)
 }
 

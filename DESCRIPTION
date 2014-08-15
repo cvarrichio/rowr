@@ -1,7 +1,7 @@
 Package: rowr
 Title: Row-based functions for R objects.
-Version: 1.0
-Date: 2014-07-23
+Version: 1.0.1
+Date: 2014-08-14
 Author: Craig Varrichio <canthony427@gmail.com>
 Maintainer: Craig Varrichio <canthony427@gmail.com>
 Description: Rowr allows the manipulation of R objects as if they were
