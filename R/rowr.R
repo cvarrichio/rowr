@@ -132,7 +132,7 @@ rows <- function(data,rownums)
     result<-data[rownums,]
   }
   #result<-ifelse(is.null(dim(data)),data[c(rownums)],data[c(rownums),])
-  return(result)
+  return((result))
 }
 
 #'Allows finding the 'length' without knowledge of dimensionality.
@@ -165,6 +165,8 @@ len <- function(data)
 #' coalesce(df$a,df$b)
 #' # Or even just:
 #' coalesce(df)
+#' # Coalesce can actually use any comparison.  For example, instead of non-NA values it could find the max in each row:
+#' cbind(EuStockMarkets,Max=coalesce(EuStockMarkets,fun=function (x,y) if (x>y) x else y))
 coalesce<-function(...,fun=(function (x,y) if(!is.na(x)) x else y))
 {
 
@@ -189,6 +191,54 @@ count<-function(...,condition=(function (x) TRUE))
   data<-c(...)
   result<-sum(sapply(data, function (x) if(condition(x)) 1 else 0))
   return(result)
+}
+
+#'Applies a function over a rolling window on any data object.
+#'
+#'Simple generalized alternative to \code{\link[zoo]{rollapply}} in package \code{\link[zoo]{zoo}} with the advantage that it works on any type of data structure (vector, list, matrix, etc) instead of requiring a \code{zoo} object.
+#'
+#'@param data any \code{R} object
+#'@param fun the function to evaluate
+#'@param window window width defining the size of the subset available to the fun at any given point
+#'@param minimum minimum width of the window.  Will not return results if the window is truncated below this value at the end of the data set
+#'@param align whether to align the window right or left
+#'@export
+#'@examples
+#'rollApply(1:100,sum,minimum=2,window=2)
+#'rollApply(c(1,2,3),sum)
+#'##6 5 3
+#'rollApply(c(1,2,3,4,5,6,7,8,9),sum)
+#'##45 44 42 39 35 30 24 17  9
+#'rollApply(c(1,2,3,4,5,6,7,8,9),sum,window=2)
+#'##3  5  7  9 11 13 15 17  9
+#'rollApply(list(1,2,3,4,5,6,7,8,9),function(x) sum(unlist(x)),window=2,minimum=2)
+#'##3  5  7  9 11 13 15 17
+#'cbind(women,Rolling3=rollApply(women,fun=function(x) mean(x$weight),window=3,align='right'))
+#'
+rollApply <- function(data,fun,window=len(data),minimum=1,align='left')
+{
+  if(minimum>len(data))
+    return()
+  FUN=match.fun(fun)
+  if (align=='left')
+    result<-sapply(1:(len(data)-minimum+1),function (x) FUN(rows(data,x:(min(len(data),(x+window-1))))))
+  if (align=='right')
+    result<-sapply(minimum:len(data),function (x) FUN(rows(data,max(1,x-window+1):x)))
+  return(result)
+}
+
+#'Applies a function row-wise on any data object.
+#'
+#'Essentially functions as a \code{MARGIN=1} \code{\link{apply}} apply but also works on data objects without 2 dimensions such as lists and vectors.
+#'
+#'@param data any \code{R} object
+#'@param fun the function to evaluate
+#'@param ... additional arguments to pass to \code{fun}
+#'rowApply(list(1,2,3),function (x) sum(unlist(x)))
+#'rowApply(df,sum)
+rowApply<-function(data,fun,...)
+{
+  sapply(1:len(data),function (x) fun(rows(data,x),...))
 }
 
 #'A more robust form of the R \code{\link{as}} function.
