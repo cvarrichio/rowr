@@ -10,11 +10,15 @@ rowApply(data, fun, ...)
 
 \item{fun}{the function to evaluate}
 
-\item{...}{additional arguments to pass to \code{fun}
-rowApply(list(1,2,3),function (x) sum(unlist(x)))
-rowApply(df,sum)}
+\item{...}{additional arguments to pass to \code{fun}}
 }
 \description{
-Essentially functions as a \code{MARGIN=1} \code{\link{apply}} apply but also works on data objects without 2 dimensions such as lists and vectors.
+Essentially functions as a \code{MARGIN=1} \code{\link{apply}} apply but also
+works on data objects without 2 dimensions such as lists and vectors.
+}
+\examples{
+rowApply(list(1,2,3),function (x) sum(unlist(x)))
+df<-data.frame(a=c(1,2,3),b=c(1,2,3))
+rowApply(df,sum)
 }
 

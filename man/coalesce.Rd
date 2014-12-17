@@ -11,7 +11,9 @@ coalesce(..., fun = (function(x, y) if (!is.na(x)) x else y))
 \item{fun}{a two argument function that returns an atomic value}
 }
 \description{
-Little more than a wrapper for \code{\link{vectorize}}, allows for duplication of SQL coalesce functionality, certain types of if-else statements, and \code{\link{apply}}/\code{\link{Reduce}} combinations.
+Little more than a wrapper for \code{\link{vectorize}}, allows for
+duplication of SQL coalesce functionality, certain types of if-else
+statements, and \code{\link{apply}}/\code{\link{Reduce}} combinations.
 }
 \examples{
 coalesce(c(NA,1,2))
@@ -20,7 +22,8 @@ df<-data.frame(a=c(NA,2,3),b=c(1,2,NA))
 coalesce(df$a,df$b)
 # Or even just:
 coalesce(df)
-# Coalesce can actually use any comparison.  For example, instead of non-NA values it could find the max in each row:
+# Coalesce can actually use any comparison.  For example, instead of non-NA
+# values it could find the max in each row:
 cbind(EuStockMarkets,Max=coalesce(EuStockMarkets,fun=function (x,y) if (x>y) x else y))
 }
 

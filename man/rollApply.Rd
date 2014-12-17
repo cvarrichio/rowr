@@ -3,21 +3,28 @@
 \alias{rollApply}
 \title{Applies a function over a rolling window on any data object.}
 \usage{
-rollApply(data, fun, window = len(data), minimum = 1, align = "left")
+rollApply(data, fun, window = len(data), minimum = 1, align = "left", ...)
 }
 \arguments{
 \item{data}{any \code{R} object}
 
 \item{fun}{the function to evaluate}
 
-\item{window}{window width defining the size of the subset available to the fun at any given point}
+\item{window}{window width defining the size of the subset available to the
+fun at any given point}
 
-\item{minimum}{minimum width of the window.  Will not return results if the window is truncated below this value at the end of the data set}
+\item{minimum}{minimum width of the window.  Will not return results if the
+window is truncated below this value at the end of the data set}
 
 \item{align}{whether to align the window right or left}
+
+\item{...}{additional arguments to pass to \code{fun}}
 }
 \description{
-Simple generalized alternative to \code{\link[zoo]{rollapply}} in package \code{\link[zoo]{zoo}} with the advantage that it works on any type of data structure (vector, list, matrix, etc) instead of requiring a \code{zoo} object.
+Simple generalized alternative to \code{\link[zoo]{rollapply}} in package
+\code{\link[zoo]{zoo}} with the advantage that it works on any type of data
+structure (vector, list, matrix, etc) instead of requiring a \code{zoo}
+object.
 }
 \examples{
 rollApply(1:100,sum,minimum=2,window=2)

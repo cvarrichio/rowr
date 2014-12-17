@@ -11,7 +11,9 @@ count(..., condition = (function(x) TRUE))
 \item{condition}{a 1 argument condition}
 }
 \description{
-Implementation of T-SQL \code{count} and Excel \code{COUNTIF} functions.  Shows the total number of elements in any number of data objects altogether or that match a condition.
+Implementation of T-SQL \code{count} and Excel \code{COUNTIF} functions.
+Shows the total number of elements in any number of data objects altogether or
+that match a condition.
 }
 \examples{
 count(c(NA,1,2))
