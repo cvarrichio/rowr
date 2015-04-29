@@ -71,8 +71,8 @@ vectorize<-function(fun,type=NULL)
 buffer<-function(x,length.out=len(x),fill=NULL,preserveClass=TRUE)
 {
   xclass<-class(x)
-  input<-vert(x)
-  results<-as.data.frame(sapply(input,rep,length.out=length.out))
+  input<-lapply(vert(x),unlist)
+  results<-as.data.frame(lapply(input,rep,length.out=length.out))
   if(length.out>len(x) && !is.null(fill))
   {
     results<-t(results)
@@ -98,12 +98,14 @@ buffer<-function(x,length.out=len(x),fill=NULL,preserveClass=TRUE)
 #' @export
 #' @examples
 #' cbind.fill(c(1,2,3),list(1,2,3),cbind(c(1,2,3)))
+#' cbind.fill(rbind(1:2),rbind(3:4))
 #'df<-data.frame(a=c(1,2,3),b=c(1,2,3))
 #' cbind.fill(c(1,2,3),list(1,2,3),cbind(c('a','b')),'a',df)
 #' cbind.fill(a=c(1,2,3),list(1,2,3),cbind(c('a','b')),'a',df,fill=NA)
 cbind.fill<-function(...,fill=NULL)
 {
   inputs<-list(...)
+  inputs<-lapply(inputs,vert)
   maxlength<-max(unlist(lapply(inputs,len)))
   bufferedInputs<-lapply(inputs,buffer,length.out=maxlength,fill,preserveClass=FALSE)
   return(Reduce(cbind.data.frame,bufferedInputs))
