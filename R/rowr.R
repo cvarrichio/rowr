@@ -1,4 +1,4 @@
-#' Row-based functions for R objects.
+#' Row-based functions for R objects
 #'
 #' Rowr allows the manipulation of R objects as if they were organized rows in a
 #' way that is familiar to people used to working with databases.  It allows
