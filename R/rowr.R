@@ -1,11 +1,12 @@
-#' Row-based functions for R objects
+#' Row-Based Functions for R Objects
 #'
-#' Rowr allows the manipulation of R objects as if they were organized rows in a
-#' way that is familiar to people used to working with databases.  It allows
-#' more consistent and predictable output to common functions, and generalizes a
-#' number of utility functions to to be failsafe with any number of objects.
+#' Provides utilities which interact with all R objects as
+#' if they were arranged in rows.  It allows more consistent and predictable 
+#' output to common functions, and generalizes a number of utility functions to
+#' to be failsafe with any number and type of input objects.
 #' @name rowr
 #' @docType package
+#' @importFrom methods as
 NULL
 
 #' Vectorize a scalar function to work on any R object.
@@ -303,6 +304,10 @@ as2<-function(object,class)
 
 vert<-function(object)
 {
-   result<-as.data.frame(cbind(as.matrix(object)))
-   return(result)
+  #result<-as.data.frame(cbind(as.matrix(object)))
+  if(is.list(object))
+    object<-cbind(object)
+  object<-data.frame(object)
+  
+  return(object)
 }
