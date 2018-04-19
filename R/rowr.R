@@ -214,6 +214,7 @@ count<-function(...,condition=(function (x) TRUE))
 #'@param minimum minimum width of the window.  Will not return results if the
 #'  window is truncated below this value at the end of the data set
 #'@param align whether to align the window right or left
+#'@param progressbar whether to add a progress bar
 #'@param ... additional arguments to pass to \code{fun}
 #'@export
 #'@examples
@@ -228,15 +229,22 @@ count<-function(...,condition=(function (x) TRUE))
 #'##3  5  7  9 11 13 15 17
 #'cbind(women,Rolling3=rollApply(women,fun=function(x) mean(x$weight),window=3,align='right'))
 #'
-rollApply <- function(data,fun,window=len(data),minimum=1,align='left',...)
+rollApply <- function(data,fun,window=len(data),minimum=1,align='left',progressbar=FALSE,...)
 {
   if(minimum>len(data))
     return()
+  if(progressbar) {
+    if (system.file(package='pbapply')=='')
+      stop('Package pbapply required for progress bar.')
+    SAPPLY=pbapply::pbsapply
+  } else {
+    SAPPLY=sapply
+  }
   FUN=match.fun(fun)
   if (align=='left')
-    result<-sapply(1:(len(data)-minimum+1),function (x) FUN(rows(data,x:(min(len(data),(x+window-1)))),...))
+    result<-SAPPLY(1:(len(data)-minimum+1),function (x) FUN(rows(data,x:(min(len(data),(x+window-1)))),...))
   if (align=='right')
-    result<-sapply(minimum:len(data),function (x) FUN(rows(data,max(1,x-window+1):x),...))
+    result<-SAPPLY(minimum:len(data),function (x) FUN(rows(data,max(1,x-window+1):x),...))
   return(result)
 }
 
@@ -247,15 +255,23 @@ rollApply <- function(data,fun,window=len(data),minimum=1,align='left',...)
 #'
 #'@param data any \code{R} object
 #'@param fun the function to evaluate
+#'@param progressbar whether to add a progress bar
 #'@param ... additional arguments to pass to \code{fun}
 #'@export
 #'@examples
 #'rowApply(list(1,2,3),function (x) sum(unlist(x)))
 #'df<-data.frame(a=c(1,2,3),b=c(1,2,3))
 #'rowApply(df,sum)
-rowApply<-function(data,fun,...)
+rowApply<-function(data,fun,progressbar=FALSE,...)
 {
-  sapply(1:len(data),function (x) fun(rows(data,x),...))
+  if(progressbar) {
+    if (system.file(package='pbapply')=='')
+      stop('Package pbapply required for progress bar.')
+    SAPPLY=pbapply::pbsapply
+  } else {
+    SAPPLY=sapply
+  }
+  SAPPLY(1:len(data),function (x) fun(rows(data,x),...))
 }
 
 
